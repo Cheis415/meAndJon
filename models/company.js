@@ -44,20 +44,67 @@ class Company {
     return company;
   }
 
-  /** Find all companies.
+  /** Find all companies. 
    *
-   * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
+   * Filters: 
+   *  ~ Added minEmployees
+   *  ~ Added maxEmployees
+   *  ~ Added name (ILIKE is used to find CASE - INSENSITIVE matches)
+   * 
+   *  Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
-    const companiesRes = await db.query(
-          `SELECT handle,
+  static async findAll(fillMeUp = {}) {
+      let query = `SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
+           FROM companies`;
+
+    let values = [];
+    let queryExpressions = [];
+
+    //Create object key values to the input object
+    const { minEmployees, maxEmployees, name } = fillMeUp;
+
+    if (minEmployees > maxEmployees) {
+      throw new BadRequestError("Minimum employees can't be greather than maximum employes...");
+    }
+
+    //Query Search terms, add query values to a collection
+    // We create two collections for expressions and for query values in order 
+    // to generate our SQL.
+
+    //Drops if name is undefined
+    if (minEmployees !== undefined) {
+      values.push(minEmployees);
+      queryExpressions.push(`num_employees >= $${values.length}`);
+    }
+
+    //Drops if name is undefined
+    if (maxEmployees !== undefined) {
+      values.push(maxEmployees);
+      queryExpressions.push(`num_employees <= $${values.length}`);
+    }
+
+    //Drops if name is undefined
+    if (name !== undefined) {
+      values.push(`${name}`);
+      queryExpressions.push(`name ILIKE $${values.length}`);
+    }
+    
+    //If expressions exist, add it to the SQL command through the query
+    if (queryExpressions.length > 0) {
+      query += " WHERE " + queryExpressions.join(" AND ");
+    }
+
+    //ORDER the query by name by adding to the query value
+    query += " ORDER BY name";
+
+    //Format our expression and query into SQL
+    const companiesRes = await db.query(query, values)
+
     return companiesRes.rows;
   }
 

@@ -5,7 +5,7 @@ const { BadRequestError } = require("../expressError");
 describe("sqlForPartialUpdate", function () {
     test("works: for users", function () {
     const thisFunc = sqlForPartialUpdate(
-      {firstName: "Marty"},  {firstName: 'Aliya'}
+      {firstName: "Marty"},  {firstName: 'first_name'}
     )
       
       expect(thisFunc).toEqual({
@@ -15,12 +15,14 @@ describe("sqlForPartialUpdate", function () {
     });
   
     test("works: for companies", function () {
-     
-      expect(payload).toEqual({
-        iat: expect.any(Number),
-        username: "test",
-        isAdmin: true,
-      });
+      const thisFunc = sqlForPartialUpdate(
+        {numEmployees: '7'},  {numEmployees: 'num_employees'}
+      )
+        
+        expect(thisFunc).toEqual({
+          setCols: '"num_employees"=$1',
+          values: ["7"]
+        });
     });
     // if (keys.length === 0) throw new BadRequestError("No data");
 
