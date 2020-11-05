@@ -156,7 +156,7 @@ describe("findAll", function () {
     let companies = await Company.findAll({ name: "no" });
     expect(companies).toEqual([]);
   });
-
+  // to throw instead of instance of?
   test("bad request if invalid min > max", async function () {
     try {
       await Company.findAll({ minEmployees: 10, maxEmployees: 1});
